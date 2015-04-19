@@ -1459,7 +1459,7 @@ void check_servers(void)
 	    }
 	}
       
-      if (!(serv->flags & SERV_NO_REBIND))
+      if (!(serv->flags & (SERV_NO_REBIND | SERV_IS_REGEX)))
 	{
 	  if (serv->flags & (SERV_HAS_DOMAIN | SERV_FOR_NODOTS | SERV_USE_RESOLV))
 	    {

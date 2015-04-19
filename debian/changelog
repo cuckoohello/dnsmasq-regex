@@ -1,3 +1,9 @@
+dnsmasq (2.72-4) unstable; urgency=medium
+
+   * dnsmasq regrex
+
+ -- Yafeng Shan <cuckoo@kokonur.me>  Wed, 11 Feb 2015 21:56:12 +0000
+
 dnsmasq (2.72-3) unstable; urgency=medium
 
    * debian/systemd.service: switch from Type=dbus to Type=forking.
