@@ -595,15 +595,30 @@ static size_t process_reply(struct dns_header *header, time_t now, struct server
       unsigned int matchlen = 0;
       for (ipset_pos = daemon->ipsets; ipset_pos; ipset_pos = ipset_pos->next) 
 	{
-	  unsigned int domainlen = strlen(ipset_pos->domain);
-	  char *matchstart = daemon->namebuff + namelen - domainlen;
-	  if (namelen >= domainlen && hostname_isequal(matchstart, ipset_pos->domain) &&
-	      (domainlen == 0 || namelen == domainlen || *(matchstart - 1) == '.' ) &&
-	      domainlen >= matchlen) 
-	    {
-	      matchlen = domainlen;
-	      sets = ipset_pos->sets;
-	    }
+	  if (ipset_pos->flags & IPSET_IS_REGEX){
+#ifdef HAVE_REGEX
+		  int captcount = 0;
+		  if (pcre_fullinfo(ipset_pos->regex, ipset_pos->pextra, PCRE_INFO_CAPTURECOUNT, &captcount) == 0)
+		  {
+			  /* C99 dyn-array, or alloca must be used */
+			  int ovect[(captcount + 1) * 3];
+			  if (pcre_exec(ipset_pos->regex, ipset_pos->pextra, daemon->namebuff, namelen, 0, 0, ovect, (captcount + 1) * 3) > 0){
+				  sets = ipset_pos->sets;
+			  }
+		  }
+
+#endif
+	  }else{
+		  unsigned int domainlen = strlen(ipset_pos->domain);
+		  char *matchstart = daemon->namebuff + namelen - domainlen;
+		  if (namelen >= domainlen && hostname_isequal(matchstart, ipset_pos->domain) &&
+				  (domainlen == 0 || namelen == domainlen || *(matchstart - 1) == '.' ) &&
+				  domainlen >= matchlen)
+		  {
+			  matchlen = domainlen;
+			  sets = ipset_pos->sets;
+		  }
+	  }
 	}
     }
 #endif

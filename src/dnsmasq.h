@@ -516,9 +516,17 @@ struct server {
   struct server *next; 
 };
 
+#define IPSET_IS_DOMAIN 1
+#define IPSET_IS_REGEX 2
+
 struct ipsets {
   char **sets;
   char *domain;
+#ifdef HAVE_REGEX
+  pcre *regex;
+  pcre_extra *pextra;
+#endif
+  int flags;
   struct ipsets *next;
 };
 
