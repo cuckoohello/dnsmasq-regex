@@ -1535,7 +1535,7 @@ void check_servers(void)
 	    serv->sfd->used = 1;
 	}
       
-      if (!(serv->flags & SERV_NO_REBIND) && !(serv->flags & SERV_LITERAL_ADDRESS))
+      if (!(serv->flags & (SERV_NO_REBIND | SERV_IS_REGEX)) && !(serv->flags & SERV_LITERAL_ADDRESS))
 	{
 	  if (++count > SERVERS_LOGGED)
 	    continue;

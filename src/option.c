@@ -2386,20 +2386,46 @@ static int one_opt(int option, char *arg, char *errstr, char *gen_err, int comma
 	      arg++;
 	    while (rebind || (end = split_chr(arg, '/')))
 	      {
-		char *domain = NULL;
-		/* elide leading dots - they are implied in the search algorithm */
-		while (*arg == '.') arg++;
-		/* # matches everything and becomes a zero length domain string */
-		if (strcmp(arg, "#") == 0)
-		  domain = "";
-		else if (strlen (arg) != 0 && !(domain = canonicalise_opt(arg)))
-		  option = '?';
+		char *domain = NULL, *regex = NULL;
+		char *real_end = arg + strlen(arg);
+
+		if (*arg == ':' && *(real_end - 1) == ':')
+		  {
+		     *(real_end - 1) = '\0';
+		     regex = arg + 1;
+		  }
+		else
+		  {
+		    /* elide leading dots - they are implied in the search algorithm */
+		    while (*arg == '.') arg++;
+
+		    /* # matches everything and becomes a zero length domain string */
+		    if (strcmp(arg, "#") == 0)
+		      domain = "";
+		    else if (strlen (arg) != 0 && !(domain = canonicalise_opt(arg)))
+		      option = '?';
+		  }
 		serv = opt_malloc(sizeof(struct server));
 		memset(serv, 0, sizeof(struct server));
 		serv->next = newlist;
 		newlist = serv;
 		serv->domain = domain;
-		serv->flags = domain ? SERV_HAS_DOMAIN : SERV_FOR_NODOTS;
+		serv->flags = domain || regex ? SERV_HAS_DOMAIN : SERV_FOR_NODOTS;
+		if (regex)
+		  {
+#ifdef HAVE_REGEX
+		    const char *error;
+		    int erroff;
+		    serv->regex = pcre_compile(regex, 0, &error, &erroff, NULL);
+
+		    if (!serv->regex)
+		      ret_err(error);
+		    serv->flags |= SERV_IS_REGEX;
+		    serv->pextra = pcre_study(serv->regex, 0, &error);
+#else
+		    ret_err("Using a regex while server was configured without regex support!");
+#endif
+		  }
 		arg = end;
 		if (rebind)
 		  break;
@@ -2515,21 +2541,44 @@ static int one_opt(int option, char *arg, char *errstr, char *gen_err, int comma
 	 if (arg && *arg == '/') 
 	   {
 	     arg++;
+
 	     while ((end = split_chr(arg, '/'))) 
 	       {
-		 char *domain = NULL;
-		 /* elide leading dots - they are implied in the search algorithm */
-		 while (*arg == '.')
-		   arg++;
-		 /* # matches everything and becomes a zero length domain string */
-		 if (strcmp(arg, "#") == 0 || !*arg)
-		   domain = "";
-		 else if (strlen(arg) != 0 && !(domain = canonicalise_opt(arg)))
-		   option = '?';
+		 char *domain = NULL, *regex = NULL;
+		 char *real_end = arg + strlen(arg);
 		 ipsets->next = opt_malloc(sizeof(struct ipsets));
 		 ipsets = ipsets->next;
 		 memset(ipsets, 0, sizeof(struct ipsets));
-		 ipsets->domain = domain;
+		 if (*arg == ':' && *(real_end - 1) == ':')
+		 {
+#ifdef HAVE_REGEX
+			 const char *error;
+			 int erroff;
+			 *(real_end - 1) = '\0';
+			 regex = arg + 1;
+			 ipsets->regex = pcre_compile(regex, 0, &error, &erroff, NULL);
+
+			 if (!ipsets->regex)
+				 ret_err(error);
+			 ipsets->pextra = pcre_study(ipsets->regex, 0, &error);
+#else
+			 ret_err("Using a regex while server was configured without regex support!");
+#endif
+			 ipsets->flags = IPSET_IS_REGEX;
+		 }
+		 else
+		 {
+			 /* elide leading dots - they are implied in the search algorithm */
+			 while (*arg == '.')
+				 arg++;
+			 /* # matches everything and becomes a zero length domain string */
+			 if (strcmp(arg, "#") == 0 || !*arg)
+				 domain = "";
+			 else if (strlen(arg) != 0 && !(domain = canonicalise_opt(arg)))
+				 option = '?';
+			 ipsets->flags = IPSET_IS_DOMAIN;
+			 ipsets->domain = domain;
+		 }
 		 arg = end;
 	       }
 	   } 
@@ -2538,6 +2587,7 @@ static int one_opt(int option, char *arg, char *errstr, char *gen_err, int comma
 	     ipsets->next = opt_malloc(sizeof(struct ipsets));
 	     ipsets = ipsets->next;
 	     memset(ipsets, 0, sizeof(struct ipsets));
+	     ipsets->flags = IPSET_IS_DOMAIN;
 	     ipsets->domain = "";
 	   }
 	 if (!arg || !*arg)
