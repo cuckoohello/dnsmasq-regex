@@ -274,6 +274,10 @@ static unsigned int search_servers(time_t now, struct all_addr **addrpp,
 static int match_domain_for_forward(char *domain, struct server *serv)
 {
   int ret_val = 0;
+  if ( domain == NULL ){
+	  return 0;
+  }
+
   if(serv->flags & SERV_IS_REGEX)
     {
 #ifdef HAVE_REGEX
