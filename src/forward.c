@@ -275,7 +275,11 @@ static int match_domain_for_forward(char *domain, struct server *serv)
 {
   int ret_val = 0;
   if ( domain == NULL ){
-	  return 0;
+	  if (serv->domain == NULL){
+		  return 1;
+	  }else {
+		  return 0;
+	  }
   }
 
   if(serv->flags & SERV_IS_REGEX)

@@ -1,3 +1,9 @@
+dnsmasq (2.72-5) unstable; urgency=medium
+
+   * fixed dns duplicate request bug
+
+ -- Yafeng Shan <cuckoo@kokonur.me>  Wed, 11 Feb 2015 21:56:12 +0000
+
 dnsmasq (2.72-4) unstable; urgency=medium
 
    * dnsmasq regrex
