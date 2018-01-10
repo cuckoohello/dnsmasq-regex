@@ -327,6 +327,13 @@ int sa_len(union mysockaddr *addr)
 int hostname_isequal(const char *a, const char *b)
 {
   unsigned int c1, c2;
+
+  if (a == NULL || b ==NULL) {
+    if (a == NULL && b == NULL)
+      return 1;
+    else
+      return 0;
+  }
   
   do {
     c1 = (unsigned char) *a++;
