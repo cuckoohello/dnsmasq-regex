@@ -109,6 +109,10 @@ HAVE_CONNTRACK
    a build-dependency on libnetfilter_conntrack, but the resulting binary will
    still run happily on a kernel without conntrack support.
 
+HAVE_REGEX
+   Define this if you want to link against lib pcre to get regex
+   support in "address=" matches
+
 HAVE_IPSET
     define this to include the ability to selectively add resolved ip addresses
     to given ipsets.
@@ -185,7 +189,9 @@ RESOLVFILE
 /* #define HAVE_IDN */
 /* #define HAVE_LIBIDN2 */
 /* #define HAVE_CONNTRACK */
+/* #define HAVE_REGEX */
 /* #define HAVE_DNSSEC */
+#define HAVE_REGEX
 
 
 /* Default locations for important system files. */
@@ -403,6 +409,10 @@ static char *compile_opts =
 "no-"
 #endif
 "DBus "
+#ifndef HAVE_REGEX
+"no-"
+#endif
+"regex "
 #ifndef LOCALEDIR
 "no-"
 #endif

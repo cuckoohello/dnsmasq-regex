@@ -156,6 +156,10 @@ extern int capget(cap_user_header_t header, cap_user_data_t data);
 #  include <nettle/nettle-meta.h>
 #endif
 
+#ifdef HAVE_REGEX
+#  include <pcre.h>
+#endif
+
 /* daemon is function in the C library.... */
 #define daemon dnsmasq_daemon
 
@@ -524,6 +528,7 @@ union mysockaddr {
 #define SERV_LOOP           8192  /* server causes forwarding loop */
 #define SERV_DO_DNSSEC     16384  /* Validate DNSSEC when using this server */
 #define SERV_GOT_TCP       32768  /* Got some data from the TCP connection */
+#define SERV_IS_REGEX      65536  /* server entry is a regex */
 
 struct serverfd {
   int fd;
@@ -545,6 +550,10 @@ struct server {
   char *domain; /* set if this server only handles a domain. */ 
   int flags, tcpfd, edns_pktsz;
   time_t pktsz_reduced;
+#ifdef HAVE_REGEX
+  pcre *regex;
+  pcre_extra *pextra;
+#endif
   unsigned int queries, failed_queries;
 #ifdef HAVE_LOOP
   u32 uid;
@@ -552,9 +561,17 @@ struct server {
   struct server *next; 
 };
 
+#define IPSET_IS_DOMAIN 1
+#define IPSET_IS_REGEX 2
+
 struct ipsets {
   char **sets;
   char *domain;
+#ifdef HAVE_REGEX
+  pcre *regex;
+  pcre_extra *pextra;
+#endif
+  int flags;
   struct ipsets *next;
 };
 
